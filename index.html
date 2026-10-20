@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Student Event Registration</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #e0e7ff 0%, #f5f3ff 100%);
+      min-height: 100vh;
+    }
+    #regCard {
+      max-width: 640px;
+      margin: 0 auto;
+      border: none;
+      border-radius: 16px;
+      overflow: hidden;
+      transition: background-color .4s ease, color .4s ease;
+    }
+    #cardHeading {
+      background-color: #4f46e5;
+      color: #ffffff;
+      transition: background-color .4s ease, color .4s ease;
+    }
+    #instructions, #eventDetails {
+      background: #f8f9fa;
+      border-left: 4px solid #4f46e5;
+      border-radius: 6px;
+      padding: 12px 16px;
+    }
+    #messageArea { min-height: 56px; }
+    #eventList .list-group-item { transition: background-color .2s ease, transform .2s ease; cursor: pointer; }
+    .source-box {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      border-radius: 10px;
+      padding: 16px;
+      max-height: 520px;
+      overflow: auto;
+      font-size: 0.8rem;
+      white-space: pre;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container py-5">
+
+  <!-- ================= REGISTRATION COMPONENT ================= -->
+  <div class="card shadow-lg" id="regCard">
+
+    <div class="card-header p-4" id="cardHeading">
+      <h2 class="h3 mb-1" id="eventTitle">UET TechFest 2026</h2>
+      <p class="mb-0 small">Join us for a week of workshops, talks and competitions at the university campus. Seats are limited, so register today!</p>
+    </div>
+
+    <div class="card-body p-4">
+
+      <!-- Control buttons -->
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <button type="button" class="btn btn-outline-primary btn-sm" id="toggleInstructions">Show / Hide Instructions</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="toggleDetails">Toggle Event Details</button>
+        <button type="button" class="btn btn-outline-dark btn-sm" id="changeColorBtn">Change Card Colour</button>
+      </div>
+
+      <!-- jQuery show/hide target -->
+      <div id="instructions" class="mb-3">
+        <strong>Instructions:</strong>
+        <ol class="mb-0 ps-3">
+          <li>Enter your full name and university email.</li>
+          <li>Pick an event from the dropdown.</li>
+          <li>Click <em>Register</em> to confirm your seat.</li>
+        </ol>
+      </div>
+
+      <!-- jQuery slideToggle target -->
+      <div id="eventDetails" class="mb-3" style="display:none;">
+        <strong>Event Details:</strong>
+        <ul class="mb-0 ps-3">
+          <li><b>Date:</b> 12–16 November 2026</li>
+          <li><b>Venue:</b> Main Auditorium &amp; CS Labs</li>
+          <li><b>Entry:</b> Free for all registered students</li>
+        </ul>
+      </div>
+
+      <!-- Registration form -->
+      <form id="regForm" novalidate>
+        <div class="mb-3">
+          <label for="studentName" class="form-label">Student Name</label>
+          <input type="text" class="form-control" id="studentName" placeholder="e.g. Ali Khan">
+        </div>
+        <div class="mb-3">
+          <label for="studentEmail" class="form-label">Email</label>
+          <input type="email" class="form-control" id="studentEmail" placeholder="e.g. ali@uetmardan.edu.pk">
+        </div>
+        <div class="mb-3">
+          <label for="eventSelect" class="form-label">Select Event</label>
+          <select class="form-select" id="eventSelect">
+            <option value="AI &amp; Machine Learning Workshop">AI &amp; Machine Learning Workshop</option>
+            <option value="Hackathon 24H">Hackathon 24H</option>
+            <option value="Web Development Bootcamp">Web Development Bootcamp</option>
+            <option value="Robotics Showcase">Robotics Showcase</option>
+          </select>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button type="submit" class="btn btn-primary" id="registerBtn">Register</button>
+          <button type="button" class="btn btn-success" id="addEventBtn">Add Event to My List</button>
+        </div>
+      </form>
+
+      <!-- Message / details area -->
+      <div id="messageArea" class="mt-3" role="alert" aria-live="polite"></div>
+
+      <!-- jQuery dynamic list -->
+      <h3 class="h6 mt-4">My Selected Events <span class="badge bg-secondary" id="eventCount">0</span></h3>
+      <ul class="list-group" id="eventList">
+        <li class="list-group-item text-muted" id="emptyItem">No events added yet.</li>
+      </ul>
+
+    </div>
+  </div>
+  <!-- ================= END COMPONENT ================= -->
+
+  <!-- Source code display -->
+  <div class="mt-5" style="max-width: 960px; margin: 0 auto;">
+    <h2 class="h4">Complete Source Code</h2>
+    <p class="text-muted small">This is the full source of this page, loaded live.</p>
+    <pre class="source-box"><code id="sourceCode">Loading source...</code></pre>
+  </div>
+
+</div>
+
+<!-- jQuery and Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ==========================================================
+   PART 1: PLAIN JAVASCRIPT
+   (Validation, dynamic message, style manipulation)
+   ========================================================== */
+
+// Helper: build a Bootstrap alert inside #messageArea
+function showMessage(html, type) {
+  var area = document.getElementById("messageArea");
+  area.innerHTML = '<div class="alert alert-' + type + ' mb-0">' + html + '</div>';
+}
+
+// Escape user input so it can't inject HTML
+function escapeHtml(text) {
+  var div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// 1 + 2) Input validation and dynamic personalised message
+document.getElementById("regForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  var nameInput  = document.getElementById("studentName");
+  var emailInput = document.getElementById("studentEmail");
+  var eventValue = document.getElementById("eventSelect").value;
+
+  var name  = nameInput.value.trim();
+  var email = emailInput.value.trim();
+
+  // Reset previous validation styling
+  nameInput.classList.remove("is-invalid");
+  emailInput.classList.remove("is-invalid");
+
+  // Check for empty fields
+  var missing = [];
+  if (name === "")  { missing.push("Student Name"); nameInput.classList.add("is-invalid"); }
+  if (email === "") { missing.push("Email");        emailInput.classList.add("is-invalid"); }
+
+  if (missing.length > 0) {
+    showMessage("<strong>Error:</strong> Please fill in the required field(s): " + missing.join(" and ") + ".", "danger");
+    return;
+  }
+
+  // Basic email format check
+  var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailPattern.test(email)) {
+    emailInput.classList.add("is-invalid");
+    showMessage("<strong>Error:</strong> Please enter a valid email address.", "danger");
+    return;
+  }
+
+  // Valid: personalised message (no data is actually submitted)
+  showMessage(
+    "<strong>Registration successful!</strong><br>" +
+    "Thank you, <b>" + escapeHtml(name) + "</b>! You are registered for <b>" + eventValue + "</b>.<br>" +
+    "A confirmation will be sent to <i>" + escapeHtml(email) + "</i>.",
+    "success"
+  );
+});
+
+// 3) Style manipulation: change card heading colours on each click
+var colorThemes = [
+  { bg: "#4f46e5", fg: "#ffffff" },
+  { bg: "#059669", fg: "#ffffff" },
+  { bg: "#dc2626", fg: "#ffffff" },
+  { bg: "#f59e0b", fg: "#1f2937" },
+  { bg: "#0ea5e9", fg: "#ffffff" }
+];
+var themeIndex = 0;
+
+document.getElementById("changeColorBtn").addEventListener("click", function () {
+  themeIndex = (themeIndex + 1) % colorThemes.length;
+  var heading = document.getElementById("cardHeading");
+  heading.style.backgroundColor = colorThemes[themeIndex].bg;
+  heading.style.color = colorThemes[themeIndex].fg;
+  document.getElementById("regCard").style.boxShadow = "0 0 0 3px " + colorThemes[themeIndex].bg;
+});
+
+/* ==========================================================
+   PART 2: jQUERY
+   (Show/hide, effects, dynamic content, events + selectors)
+   ========================================================== */
+$(document).ready(function () {
+
+  // 1) Show / Hide instructions
+  $("#toggleInstructions").click(function () {
+    $("#instructions").toggle();
+  });
+
+  // 2) jQuery effect: slideToggle on event details
+  $("#toggleDetails").click(function () {
+    $("#eventDetails").slideToggle(400);
+  });
+
+  // 3) Dynamic content: add the selected event to a list and update the counter
+  $("#addEventBtn").click(function () {
+    var eventName = $("#eventSelect").val();
+    var alreadyAdded = false;
+
+    $("#eventList li").each(function () {
+      if ($(this).data("event") === eventName) { alreadyAdded = true; }
+    });
+
+    if (alreadyAdded) {
+      $("#messageArea").hide().html(
+        '<div class="alert alert-warning mb-0">"' + eventName + '" is already in your list.</div>'
+      ).fadeIn(400);
+      return;
+    }
+
+    $("#emptyItem").remove();
+    var $item = $("<li></li>")
+      .addClass("list-group-item d-flex justify-content-between align-items-center")
+      .data("event", eventName)
+      .text(eventName)
+      .append('<span class="badge bg-primary rounded-pill">Added</span>')
+      .hide();
+
+    $("#eventList").append($item);
+    $item.fadeIn(400);
+
+    // Update an existing element
+    $("#eventCount").text($("#eventList li").length);
+  });
+
+  // 4) Event handling + selectors: mouseover/mouseout on list items (class selector)
+  $("#eventList").on("mouseover", ".list-group-item", function () {
+    $(this).css({ "background-color": "#e0e7ff", "transform": "translateX(6px)" });
+  }).on("mouseout", ".list-group-item", function () {
+    $(this).css({ "background-color": "", "transform": "" });
+  });
+
+  // Extra: click on a list item removes it (fadeOut effect)
+  $("#eventList").on("click", ".list-group-item", function () {
+    var $li = $(this);
+    if ($li.attr("id") === "emptyItem") { return; }
+    $li.fadeOut(300, function () {
+      $li.remove();
+      var count = $("#eventList li").length;
+      $("#eventCount").text(count);
+      if (count === 0) {
+        $("#eventList").append('<li class="list-group-item text-muted" id="emptyItem">No events added yet.</li>');
+      }
+    });
+  });
+
+  // Extra: Register button grows slightly on hover (id selector)
+  $("#registerBtn").mouseover(function () {
+    $(this).css("transform", "scale(1.05)");
+  }).mouseout(function () {
+    $(this).css("transform", "scale(1)");
+  });
+
+  // Display this page's complete source code at the bottom
+  $.ajax({ url: window.location.href, dataType: "text" })
+    .done(function (src) { $("#sourceCode").text(src); })
+    .fail(function () { $("#sourceCode").text("<!DOCTYPE html>\n" + document.documentElement.outerHTML); });
+});
+</script>
+
+</body>
+</html>
